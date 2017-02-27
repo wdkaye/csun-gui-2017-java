@@ -1,2 +1,2 @@
 # csun-gui-2017-java
-Here's my Java class project for the CSUN 2017 semester.
+This commit provides a complete Part 1 of the CardChooserPanel project.
