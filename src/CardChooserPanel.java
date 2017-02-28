@@ -1,13 +1,21 @@
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import java.awt.image.BufferedImage;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -133,7 +141,7 @@ class SuitFaceMap {
             case "queen": return Face.QUEEN;
             case "king":  return Face.KING;
             default: 
-                System.out.println( "textToSuit with arg " + s );
+                System.out.println( "textToFace with arg " + s );
                 return null;
         }
     }
@@ -188,8 +196,6 @@ class CardChooserControl extends JPanel {
 }
 
 // Helper class including listeners
-
-
 class CardImagePanel extends JPanel {
 	// Class objects
     private BufferedImage img;
@@ -247,26 +253,98 @@ class CardImagePanel extends JPanel {
     }
 }
 
+// The CardChooserDialog of Part 4.
+// Let's see if we can put this in the same file (bad style?)
+class CardChooserDialog extends JDialog {
+    private CardChooserPanel cp;
+    private JButton bOK;
+    private JButton bCncl;
+    private CardChooserControl[] controls;
+    private final int numcards = 5;
+
+    // Constructor
+    public CardChooserDialog(){
+        DialogContentPane dcp = new DialogContentPane();
+        ControlPanel cp = new ControlPanel();
+        ButtonPane bp = new ButtonPane();
+    }
+
+    // Private classes
+    private class ControlPanel extends JPanel{
+        public ControlPanel(){
+            GridBagLayout layout = new GridBagLayout();
+            GridBagConstraints gbc = new GridBagConstraints();
+            setLayout(layout);
+            // TODO: create and add controls to GridBagLayout.
+            controls = new CardChooserControl[numcards];
+        }
+    }
+    private class ButtonPane extends JPanel{
+        public ButtonPane(){
+            super(true);
+            setBorder(BorderFactory.createEtchedBorder());
+            // TODO: GBL: One row, two columns for OK and Cancel buttons
+        }
+    }
+    private class DialogContentPane extends JPanel{
+        public DialogContentPane() {
+            super(true);
+            setLayout(new BorderLayout());
+            add( new ControlPanel(), BorderLayout.CENTER );
+            add( new ButtonPane(),  BorderLayout.SOUTH );
+        }
+    }
+}
+
+/*
+    // Helper class for the Part 4 menu
+    class MiniMenu extends JMenuBar {
+        private JMenu jm;
+        private JMenuItem jmi;
+        public MiniMenu(){
+            jm  = new JMenu( "Change" );
+            jmi = new JMenuItem( "Choose" );
+            jmi.addActionListener( new ActionListener() {
+                public void actionPerformed( ActionEvent ae ){
+                    if( null != cardDialog ){
+                        cardDialog.setVisible( true );
+                    }
+                }
+            });
+            jm.add( jmi );
+            this.add( jm );
+        }
+    }
+    */
+
+
 // Public class
 public class CardChooserPanel extends JPanel {
 
 	// Class objects
+    private JFrame             jFrame; //hanging ont to it for Menu
     private CardImagePanel     imagepanel;
     private CardChooserControl chooserControl;
     private JButton            chooserbtn;
     private JFileChooser       filechooser;
     private SuitFaceMap        sfMap;
+    private JMenuBar           menu;
+    //private CardChooserDialog  cardDialog;
 
     // Constructor
-    public CardChooserPanel() {
+    public CardChooserPanel( JFrame jfr ) {
+        jFrame = jfr;
         this.setLayout( null );
     	imagepanel     = new CardImagePanel();
         chooserControl = new CardChooserControl();
         chooserbtn     = new JButton( "Clickable TBD" );
         sfMap          = new SuitFaceMap();
+        //cardDialog     = new CardChooserDialog();
         this.add( imagepanel );
         this.add( chooserControl );
         this.add( chooserbtn );
+        //this.add( cardDialog );
+        //cardDialog.setVisible( false );
 
         Insets insets =  this.getInsets();
         Dimension size = imagepanel.getPreferredSize();
@@ -275,8 +353,23 @@ public class CardChooserPanel extends JPanel {
         chooserControl.setBounds( 150+insets.left, 350+insets.top, size.width, size.height );
         size = chooserbtn.getPreferredSize();
         chooserbtn.setBounds( 200+insets.left, 400+insets.top, size.width, size.height );
-        revalidate();
-        repaint();
+
+        // Building the menu
+        menu = new JMenuBar();
+        JMenu     jm  = new JMenu( "Cards" );
+        JMenuItem jmi = new JMenuItem( "Choose" );
+        jmi.addActionListener( new ActionListener() {
+            public void actionPerformed( ActionEvent ae ){
+                JFrame jfDialog = new JFrame();
+                CardChooserDialog ccd = new CardChooserDialog();
+                jfDialog.setContentPane( ccd );
+                jfDialog.setSize( 400, 300 );
+                jfDialog.setVisible( true );
+            }
+        });
+        jm.add( jmi );
+        menu.add( jm );
+        jFrame.setJMenuBar(menu);
 
         // v2 button listener.  still good for v3.
         chooserbtn.addActionListener( new ActionListener() {
@@ -294,15 +387,20 @@ public class CardChooserPanel extends JPanel {
                 }
             }
         } );
+
+        revalidate();
+        repaint();
     }
 
     // Public method
     public static void buildGUI() {
         JFrame jf = new JFrame( "Card Chooser" );
-        CardChooserPanel ccp = new CardChooserPanel();
+        CardChooserPanel ccp = new CardChooserPanel( jf );
+        //CardChooserDialog ccd = new CardChooserDialog(); // no.
         jf.setContentPane( ccp );
         jf.setSize( 600, 480 );
         jf.setVisible( true );
+        //jf.setJMenuBar( new JMenuBar() );
     }
 }
 
