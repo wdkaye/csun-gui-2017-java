@@ -8,8 +8,11 @@ import java.awt.image.BufferedImage;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -184,14 +187,21 @@ class CardChooserControl extends JPanel {
 	}
 }
 
-class CardImagePanel extends JPanel {
+// Helper class including listeners
 
-	// Class object
+
+class CardImagePanel extends JPanel {
+	// Class objects
     private BufferedImage img;
+    private CardMover cm;
 
     // Constructor
     public CardImagePanel() {
         super( true );
+        img = null;
+        cm = new CardMover();
+        addMouseListener( cm );
+        addMouseMotionListener( cm );
     }
 
     // Public methods
@@ -211,6 +221,30 @@ class CardImagePanel extends JPanel {
         	return new Dimension( 0,0 );
         }
     }
+    // nested class for event listener
+    class CardMover extends MouseAdapter{
+        // Private member variables
+        private int startx;
+        private int starty;
+        // Event Listeners
+        public void mousePressed( MouseEvent e ){
+            this.startx = e.getX();
+            this.starty = e.getY();
+        }
+        // This is moving the card somewhat satisfactorily,
+        // but only about 1/2 as far as it should
+        public void mouseDragged( MouseEvent e ){
+            int deltaX = e.getX() - startx;
+            int deltaY = e.getY() - starty;
+            this.startx = e.getX();
+            this.starty = e.getY();
+            CardImagePanel cip = CardImagePanel.this;
+            Dimension size = cip.getPreferredSize();
+            cip.setBounds( cip.getX() + deltaX, 
+                           cip.getY() + deltaY, 
+                           size.width, size.height );
+        }
+    }
 }
 
 // Public class
@@ -225,44 +259,34 @@ public class CardChooserPanel extends JPanel {
 
     // Constructor
     public CardChooserPanel() {
+        this.setLayout( null );
     	imagepanel     = new CardImagePanel();
         chooserControl = new CardChooserControl();
-        chooserbtn  = new JButton( "Clickable TBD" );
-        filechooser = new JFileChooser();
-        sfMap       = new SuitFaceMap();
-        filechooser.setFileSelectionMode( JFileChooser.FILES_ONLY ); // TBD
-        filechooser.setCurrentDirectory( new File( "images" ) );
-        filechooser.setFileFilter( new FileNameExtensionFilter( "PNG Graphics Files", "png" ) );
+        chooserbtn     = new JButton( "Clickable TBD" );
+        sfMap          = new SuitFaceMap();
         this.add( imagepanel );
         this.add( chooserControl );
         this.add( chooserbtn );
 
-        /* this was the button function for Part 1,
-           looks like we don't need it for Part 2...
-        chooserbtn.addActionListener( new ActionListener() {
-            public void actionPerformed( ActionEvent e ){
-                int retval = filechooser.showOpenDialog( null );
-                if( JFileChooser.APPROVE_OPTION == retval ){
-                	File imageFile = filechooser.getSelectedFile();
-                	//File imageFile   = new File( fileName );
-                	try {
-                		//chooserbtn.setVisible( false ); // bughunter
-                        BufferedImage bi = ImageIO.read( imageFile );
-                        imagepanel.setImage( bi );
-                        CardChooserPanel.this.revalidate();
-                    } catch (IOException ioe ) {
-                    	// derp.
-                    } 
-                }
-            }
-        } ); */
+        Insets insets =  this.getInsets();
+        Dimension size = imagepanel.getPreferredSize();
+        imagepanel.setBounds( 20+insets.left, 10+insets.top, size.width, size.height );
+        size = chooserControl.getPreferredSize();
+        chooserControl.setBounds( 150+insets.left, 350+insets.top, size.width, size.height );
+        size = chooserbtn.getPreferredSize();
+        chooserbtn.setBounds( 200+insets.left, 400+insets.top, size.width, size.height );
+        revalidate();
+        repaint();
 
+        // v2 button listener.  still good for v3.
         chooserbtn.addActionListener( new ActionListener() {
             public void actionPerformed( ActionEvent e ){
                 try {
                     SuitFace sf = chooserControl.getDisplayedCard();
                     BufferedImage bi = sfMap.getImage( sf );
                     imagepanel.setImage( bi );
+                    Dimension size = imagepanel.getPreferredSize();
+                    imagepanel.setSize( size.width, size.height );
                     CardChooserPanel.this.revalidate();
                     CardChooserPanel.this.repaint();
                 } catch ( Exception ex ) {
